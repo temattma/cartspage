@@ -45,6 +45,23 @@ public final class ViewfinderView extends View {
   private static final int CURRENT_POINT_OPACITY = 0xA0;
   private static final int MAX_RESULT_POINTS = 20;
   private static final int POINT_SIZE = 6;
+//**********************start***********************
+
+  /**
+   * 中间那条线每次刷新移动的距离
+   */
+  private static final int SPEEN_DISTANCE = 5;
+  /**
+   * 中间滑动线的最顶端位置
+   */
+  private int slideTop;
+  /**
+   * 中间滑动线的最底端位置
+   */
+  private int slideBottom;
+  boolean isFirst;
+//**********************end*************************
+
 
   private CameraManager cameraManager;
   private final Paint paint;
@@ -88,6 +105,15 @@ public final class ViewfinderView extends View {
     if (frame == null || previewFrame == null) {
       return;
     }
+//**********************start***********************
+    //初始化中间线滑动的最上边和最下边
+    if(!isFirst){
+      isFirst = true;
+      slideTop = frame.top;
+      slideBottom = frame.bottom;
+    }
+//=**********************end*************************
+
     int width = canvas.getWidth();
     int height = canvas.getHeight();
 
@@ -104,12 +130,26 @@ public final class ViewfinderView extends View {
       canvas.drawBitmap(resultBitmap, null, frame, paint);
     } else {
 
+
+
+//**********************start***********************
+      //绘制中间的线,每次刷新界面，中间的线往下移动SPEEN_DISTANCE
+      slideTop += SPEEN_DISTANCE;
+      if(slideTop >= frame.bottom){
+        slideTop = frame.top;
+      }
+//=**********************end*************************
+
       // Draw a red "laser scanner" line through the middle to show decoding is active
       paint.setColor(laserColor);
       paint.setAlpha(SCANNER_ALPHA[scannerAlpha]);
       scannerAlpha = (scannerAlpha + 1) % SCANNER_ALPHA.length;
       int middle = frame.height() / 2 + frame.top;
-      canvas.drawRect(frame.left + 2, middle - 1, frame.right - 1, middle + 2, paint);
+//**********************start***********************
+      canvas.drawRect(frame.left + 2, slideTop - 1, frame.right - 1,slideTop + 2, paint);
+//=**********************end*************************
+
+//      canvas.drawRect(frame.left + 2, middle - 1, frame.right - 1, middle + 2, paint);
       
       float scaleX = frame.width() / (float) previewFrame.width();
       float scaleY = frame.height() / (float) previewFrame.height();
