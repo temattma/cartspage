@@ -269,9 +269,8 @@ public final class CaptureActivity extends Activity implements SurfaceHolder.Cal
     switch (rotation) {
       case Surface.ROTATION_0:
       case Surface.ROTATION_90:
-        return ActivityInfo.SCREEN_ORIENTATION_LANDSCAPE;
       default:
-        return ActivityInfo.SCREEN_ORIENTATION_REVERSE_LANDSCAPE;
+        return ActivityInfo.SCREEN_ORIENTATION_PORTRAIT;
     }
   }
   

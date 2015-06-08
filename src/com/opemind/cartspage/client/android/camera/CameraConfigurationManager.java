@@ -27,6 +27,9 @@ import android.view.WindowManager;
 
 import com.opemind.cartspage.client.android.PreferencesActivity;
 
+import java.lang.reflect.InvocationTargetException;
+import java.lang.reflect.Method;
+
 /**
  * A class which deals with reading, parsing, and setting the camera parameters which are used to
  * configure the camera hardware.
@@ -54,11 +57,21 @@ final class CameraConfigurationManager {
     display.getSize(theScreenResolution);
     screenResolution = theScreenResolution;
     Log.i(TAG, "Screen resolution: " + screenResolution);
-    cameraResolution = CameraConfigurationUtils.findBestPreviewSizeValue(parameters, screenResolution);
-    Log.i(TAG, "Camera resolution: " + cameraResolution);
+    //解决竖屏后图像拉伸问题
+    Point screenResolutionForCamera = new Point();
+    screenResolutionForCamera.x = screenResolution.x;
+    screenResolutionForCamera.y = screenResolution.y;
+    // preview size is always something like 480*320, other 320*480
+    if (screenResolution.x < screenResolution.y) {
+      screenResolutionForCamera.x = screenResolution.y;
+      screenResolutionForCamera.y = screenResolution.x;
+    }
+    cameraResolution = CameraConfigurationUtils.findBestPreviewSizeValue(parameters, screenResolutionForCamera);
+    Log.i(TAG, "Camera resolution: " + screenResolutionForCamera);
   }
 
   void setDesiredCameraParameters(Camera camera, boolean safeMode) {
+    setDisplayOrientation(camera, 90);
     Camera.Parameters parameters = camera.getParameters();
 
     if (parameters == null) {
@@ -153,6 +166,27 @@ final class CameraConfigurationManager {
     if (!safeMode && !prefs.getBoolean(PreferencesActivity.KEY_DISABLE_EXPOSURE, true)) {
       CameraConfigurationUtils.setBestExposure(parameters, newSetting);
     }
+  }
+  /*改变照相机成像的方向的方法*/
+  protected void setDisplayOrientation(Camera camera, int angle) {
+    Method downPolymorphic = null;
+    try {
+      downPolymorphic = camera.getClass().getMethod("setDisplayOrientation", new Class[] { int.class });
+
+      if (downPolymorphic != null)
+        downPolymorphic.invoke(camera, new Object[]{angle});
+    }
+    catch (NoSuchMethodException e) {
+      e.printStackTrace();
+    }
+    catch (IllegalArgumentException e) {
+      e.printStackTrace();
+    }
+    catch (IllegalAccessException e) {
+      e.printStackTrace();
+    }
+    catch (InvocationTargetException e) {
+      e.printStackTrace();    }
   }
 
 }
